@@ -15,9 +15,14 @@ const filters = document.querySelectorAll('.filters button');
 const projects = document.querySelectorAll('.project[data-category]');
 if (filters.length && projects.length) {
   filters.forEach(button => button.addEventListener('click', () => {
+    const isActive = button.classList.contains('active');
     filters.forEach(item => item.classList.remove('active'));
-    button.classList.add('active');
-    projects.forEach(project => project.classList.toggle('hidden', button.dataset.filter !== 'all' && project.dataset.category !== button.dataset.filter));
+    if (!isActive) {
+      button.classList.add('active');
+      projects.forEach(project => project.classList.toggle('hidden', project.dataset.category !== button.dataset.filter));
+    } else {
+      projects.forEach(project => project.classList.remove('hidden'));
+    }
   }));
 }
 
@@ -25,16 +30,37 @@ if (filters.length && projects.length) {
 const lightbox = document.querySelector('.lightbox');
 if (lightbox) {
   const lightboxImage = lightbox.querySelector('img');
+  const lightboxVideo = lightbox.querySelector('video');
   const lightboxCaption = lightbox.querySelector('p');
   projects.forEach(project => project.addEventListener('click', () => {
-    lightboxImage.src = project.dataset.image;
-    lightboxImage.alt = project.dataset.title;
-    lightboxCaption.textContent = project.dataset.title;
+    if (project.dataset.video) {
+      if (lightboxImage) lightboxImage.style.display = 'none';
+      if (lightboxVideo) {
+        lightboxVideo.style.display = 'block';
+        lightboxVideo.src = project.dataset.video;
+        lightboxVideo.play().catch(() => {});
+      }
+    } else {
+      if (lightboxVideo) {
+        lightboxVideo.pause();
+        lightboxVideo.style.display = 'none';
+      }
+      if (lightboxImage) {
+        lightboxImage.style.display = 'block';
+        lightboxImage.src = project.dataset.image;
+        lightboxImage.alt = project.dataset.title;
+      }
+    }
+    if (lightboxCaption) lightboxCaption.textContent = project.dataset.title;
     lightbox.showModal();
   }));
   const closeBtn = lightbox.querySelector('.close');
-  if (closeBtn) closeBtn.addEventListener('click', () => lightbox.close());
-  lightbox.addEventListener('click', event => { if (event.target === lightbox) lightbox.close(); });
+  const closeLightbox = () => {
+    if (lightboxVideo) { lightboxVideo.pause(); lightboxVideo.src = ''; }
+    lightbox.close();
+  };
+  if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', event => { if (event.target === lightbox) closeLightbox(); });
 }
 
 // Footer year (present on every page)
